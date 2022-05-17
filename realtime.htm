@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js?_ga=2.110171974.271356998.1585900177-1569171218.1585708715"></script>
+    
+    <title>Real-Time Graph</title>
+</head>
+<body>    
+    <div class="wrapper">
+        <div id="chart"></div>
+        <div id="graph"></div>
+        
+        <script>
+            chart1();
+            
+            async function chart1(){
+                function rand() {
+                    return (Math.random()*10);
+                }
+                
+                var time = new Date();
+                
+                var data = [{
+                    x: [time],
+                    y: [rand],
+                    mode: 'lines+markers',
+                    line: {color: '#FF0000', smoothing: 0.1},
+                    marker: { size: 5 },
+                }]
+                
+                var layout = {
+                    title: 'ECG Signal',
+                    width: 1250,
+                    height: 500
+                }
+                
+                Plotly.newPlot('graph', data, layout);
+                
+                var cnt = 0;
+                
+                var interval = setInterval(function() {
+                    
+                    var time = new Date();
+                    
+                    var update = {
+                        x:  [[time]],
+                        y: [[rand()]],
+                        
+                    }
+                    
+                    var olderTime = time.setSeconds(time.getSeconds() - 5);
+                    var futureTime = time.setSeconds(time.getSeconds() + 5);
+                    
+                    var minuteView = {
+                        xaxis: {
+                            type: 'date',
+                            range: [olderTime,futureTime],
+                            title: 'Time'
+                        }
+                    };
+                    Plotly.relayout('graph', minuteView);
+                    Plotly.extendTraces('graph', update, [0])
+                    
+                    // Plotly.relayout('graph', minuteView);
+                    // Plotly.extendTraces('graph', update, [0])
+                    
+                    // if(++cnt === 1000) clearInterval(interval);
+                }, 0.01);
+            }
+        </script>
+        <br>
+    </div>
+    
+</body>
+</html>

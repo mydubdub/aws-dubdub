@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css"> -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js" ></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@0.7.7"></script>
+        <link rel="stylesheet" href="style.css">
+        
+        <title>Node File Upload</title>
+    </head>
+    <body>
+        <h1 align="center">ECG Signal Computation and Plotter</h1>
+        <form class="fileupload" action="upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="upfile" id="filename" value="">
+            <br>
+            Amplification = <input text="number" name="amp" required/>
+            <br>
+            Sampling Frequency = <input text="number" name="freq" required/>
+            <br>
+            <input type="submit"/>
+            <br>
+            Name of File (without .csv) = <input type="text" id="nameoffile">
+            <button type="button" onclick="start()">Display Data</button>
+        </form>
+        <br>
+        <form action="/graph" method="GET">
+        <button>Full Signal View</button>
+        </form>
+        <br>
+        <form action="/trial" method="GET">
+        <button>Trial</button>
+        </form>
+        <br>
+        <div class="wrap" style="position:relative; width:4000px; height:300; overflow-x:auto; white-space: nowrap;">
+            <!-- style="width:4000px; height:450px; overflow-x: scroll;" -->
+            <canvas id="chart" height="200" width="2000"></canvas>               
+        </div>
+        
+        <br>
+        <div class="container" width="2000">
+            <div class="table-responsive" width="2000">
+                <h2 align="center">Summary of Data</h2>
+                <br />
+                <div align="center">
+                    <button type="button" name="load_dataSum" id="load_dataSum" class="btn btn-info">Load Summary</button>
+                </div> 
+                <br />
+                <div id="original_tableSum" width="2000">
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="container">
+            <div class="table-responsive">
+                <h2 align="center">Pre-Diagnosis</h2>
+                <br />
+                <div align="center">
+                    <button type="button" name="load_dataPRE" id="load_dataPRE" class="btn btn-info">Load Data</button>
+                </div> 
+                <br />
+                <div id="original_tablePRE">
+                </div>
+            </div>
+        </div>
+        <br>
+        
+        <div class="container">
+            <div class="table-responsive">
+                <h2 align="center">Valid Detected R-peaks</h2>
+                <br />
+                <div align="center">
+                    <button type="button" name="load_data" id="load_data" class="btn btn-info">Load R-peak</button>
+                </div> 
+                <br />
+                <div id="original_table">
+                </div>
+            </div>
+        </div>        
+        <br>
+        <div class="container">
+            <div class="table-responsive">
+                <h2 align="center">Valid Detected P-wave</h2>
+                <br />
+                <div align="center">
+                    <button type="button" name="load_data3" id="load_data3" class="btn btn-info">Load Valid P-wave</button>
+                </div> 
+                <br />
+                <div id="original_table3">
+                </div>
+            </div>
+        </div>
+        <br>
+        
+        <div class="container">
+            <div class="table-responsive">
+                <h2 align="center">Detected QS-wave</h2>
+                <br/>
+                <div align="center">
+                    <button type="button" name="load_data4" id="load_data4" class="btn btn-info">Load QS-wave</button>
+                </div> 
+                <br />
+                <div id="original_table4">
+                </div>
+            </div>
+        </div>
+        <br>
+        
+        <script>
+            
+            function start(){
+                getData();
+                chartIt();
+                
+                async function getData(){
+                    const ys = [];
+                    const xs = [];
+                    // Record30down
+                    var fileName = document.querySelector("#nameoffile").value;
+                    const response = await fetch(fileName + 'LPF.csv');
+                    const data = await response.text();
+                    console.log(fileName);
+                    
+                    const table = data.split('\n').slice(10);
+                    table.forEach (row => {
+                        const columns = row.split('	');
+                        const Yline = columns[1];
+                        const Xline = columns[0];
+                        //  for (i = 0; i<800; i++){
+                            //     Xline[i];
+                            // }
+                            ys.push(parseFloat(Yline));
+                            xs.push(parseFloat(Xline));
+                        });
+                        
+                        const ys2 = [];
+                        const xs2 = [];
+                        const arr2 = [];
+                        // var fileName2 = document.querySelector('200edit.csv').value;
+                        const response2 = await fetch(fileName + 'RR.csv');
+                        const data2 = await response2.text(); 
+                        const table2 = data2.split('\n').slice(0);
+                        table2.forEach (row => {
+                            const columns2 = row.split('	');
+                            const Yline2 = columns2[1];
+                            const Xline2 = columns2[0];
+                            
+                            ys2.push(parseFloat(Yline2));
+                            xs2.push(parseFloat(Xline2));
+                            //  arr2.push = [{x: xs2, y: ys2}];
+                        });
+                        
+                        const ys3 = [];
+                        const xs3 = [];
+                        // var fileName2 = document.querySelector('200edit.csv').value;
+                        const response3 = await fetch(fileName + 'RLPF.csv');
+                        const data3 = await response3.text(); 
+                        const table3 = data3.split('\n').slice(0);
+                        table3.forEach (row => {
+                            const columns3 = row.split('	');
+                            const Yline3 = columns3[1];
+                            const Xline3 = columns3[0];
+                            
+                            ys3.push(parseFloat(Yline3));
+                            xs3.push(parseFloat(Xline3));
+                        });
+                        
+                        const ys4 = [];
+                        const xs4 = [];
+                        // var fileName2 = document.querySelector('200edit.csv').value;
+                        const response4 = await fetch(fileName + 'P.csv');
+                        const data4 = await response4.text(); 
+                        const table4 = data4.split('\n').slice(0);
+                        table4.forEach (row => {
+                            const columns4 = row.split('	');
+                            const Yline4 = columns4[1];
+                            const Xline4 = columns4[0];
+                            
+                            ys4.push(parseFloat(Yline4));
+                            xs4.push(parseFloat(Xline4));
+                        });
+                        
+                        const ys5 = [];
+                        const ys6 = [];
+                        const xs5 = [];
+                        // var fileName2 = document.querySelector('200edit.csv').value;
+                        const response5 = await fetch(fileName + 'QS.csv');
+                        const data5 = await response5.text(); 
+                        const table5 = data5.split('\n').slice(0);
+                        table5.forEach (row => {
+                            const columns5 = row.split('	');
+                            const Yline5 = columns5[1];
+                            const Yline6 = columns5[2];
+                            const Xline5 = columns5[0];
+                            
+                            ys5.push(parseFloat(Yline5));
+                            ys6.push(parseFloat(Yline6));
+                            xs5.push(parseFloat(Xline5));
+                        });
+                        
+                        const ystom = [];
+                        const xstom = [];
+                        // var fileName2 = document.querySelector('200edit.csv').value;
+                        const responsetom = await fetch(fileName + 'QRS.csv');
+                        const datatom = await responsetom.text(); 
+                        const tabletom = datatom.split('\n').slice(52);
+                        tabletom.forEach (row => {
+                            const columnstom = row.split('	');
+                            const Ylinetom = columnstom[1];
+                            const Xlinetom = columnstom[0];
+                            
+                            ystom.push(parseFloat(Ylinetom));
+                            xstom.push(parseFloat(Xlinetom));
+                        });
+                        
+                        
+                        $(document).ready(function(){
+                            $('#load_data').click(function(){
+                                $.ajax({
+                                    url: fileName + 'RR.csv',
+                                    dataType:"text",
+                                    success:function(data)
+                                    {
+                                        var original_data = data.split(/\r?\n|\r/);
+                                        var table_data = '<table class="table table-bordered table-striped">';
+                                            for(var count = 0; count<original_data.length; count++)
+                                            {
+                                                var cell_data = original_data[count].split("	");
+                                                table_data += '<tr>';
+                                                    for(var cell_count=0; cell_count<cell_data.length; cell_count++)
+                                                    {
+                                                        if(count === 0)
+                                                        { 
+                                                            table_data += '<th>'+cell_data[cell_count]+'</th>';
+                                                        }
+                                                        else
+                                                        {
+                                                            table_data += '<td>'+cell_data[cell_count]+'</td>';
+                                                        }
+                                                    }
+                                                    table_data += '</tr>';
+                                                }
+                                                table_data += '</table>';
+                                                $('#original_table').html(table_data);
+                                            }
+                                        });
+                                    });   
+                                });
+                                
+                                $(document).ready(function(){
+                                    $('#load_dataPRE').click(function(){
+                                        $.ajax({
+                                            url: fileName + 'Pre.csv',
+                                            dataType:"text",
+                                            success:function(data)
+                                            {
+                                                var original_data = data.split(/\r?\n|\r/);
+                                                var table_data = '<table class="table table-bordered table-striped">';
+                                                    for(var count = 0; count<original_data.length; count++)
+                                                    {
+                                                        var cell_data = original_data[count].split("	");
+                                                        table_data += '<tr>';
+                                                            for(var cell_count=0; cell_count<cell_data.length; cell_count++)
+                                                            {
+                                                                if(count === 0)
+                                                                { 
+                                                                    table_data += '<th>'+cell_data[cell_count]+'</th>';
+                                                                }
+                                                                else
+                                                                {
+                                                                    table_data += '<td>'+cell_data[cell_count]+'</td>';
+                                                                }
+                                                            }
+                                                            table_data += '</tr>';
+                                                        }
+                                                        table_data += '</table>';
+                                                        $('#original_tablePRE').html(table_data);
+                                                    }
+                                                });
+                                            });   
+                                        });
+                                        
+                                        $(document).ready(function(){
+                                            $('#load_dataSum').click(function(){
+                                                $.ajax({
+                                                    url: fileName + 'log.csv',
+                                                    dataType:"text",
+                                                    success:function(data)
+                                                    {
+                                                        var original_data = data.split(/\r?\n|\r/);
+                                                        var table_data = '<table class="table table-bordered table-striped">';
+                                                            for(var count = 0; count<original_data.length; count++)
+                                                            {
+                                                                var cell_data = original_data[count].split("	");
+                                                                table_data += '<tr>';
+                                                                    for(var cell_count=0; cell_count<cell_data.length; cell_count++)
+                                                                    {
+                                                                        if(count === 0)
+                                                                        { 
+                                                                            table_data += '<th>'+cell_data[cell_count]+'</th>';
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            table_data += '<td>'+cell_data[cell_count]+'</td>';
+                                                                        }
+                                                                    }
+                                                                    table_data += '</tr>';
+                                                                }
+                                                                table_data += '</table>';
+                                                                $('#original_tableSum').html(table_data);
+                                                            }
+                                                        });
+                                                    });   
+                                                });
+                                                
+                                                $(document).ready(function(){
+                                                    $('#load_data3').click(function(){
+                                                        $.ajax({
+                                                            url: fileName + 'P.csv',
+                                                            dataType:"text",
+                                                            success:function(data)
+                                                            {
+                                                                var original_data = data.split(/\r?\n|\r/);
+                                                                var table_data = '<table class="table table-bordered table-striped">';
+                                                                    for(var count = 0; count<original_data.length; count++)
+                                                                    {
+                                                                        var cell_data = original_data[count].split("	");
+                                                                        table_data += '<tr>';
+                                                                            for(var cell_count=0; cell_count<cell_data.length; cell_count++)
+                                                                            {
+                                                                                if(count === 0)
+                                                                                {
+                                                                                    table_data += '<th>'+cell_data[cell_count]+'</th>';
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    table_data += '<td>'+cell_data[cell_count]+'</td>';
+                                                                                }
+                                                                            }
+                                                                            table_data += '</tr>';
+                                                                        }
+                                                                        table_data += '</table>';
+                                                                        $('#original_table3').html(table_data);
+                                                                    }
+                                                                });
+                                                            });   
+                                                        });
+                                                        
+                                                        $(document).ready(function(){
+                                                            $('#load_data').click(function(){
+                                                                $.ajax({
+                                                                    url: fileName + 'QS.csv',
+                                                                    dataType:"text",
+                                                                    success:function(data)
+                                                                    {
+                                                                        var original_data = data.split(/\r?\n|\r/);
+                                                                        var table_data = '<table class="table table-bordered table-striped">';
+                                                                            for(var count = 0; count<original_data.length; count++)
+                                                                            {
+                                                                                var cell_data = original_data[count].split("	");
+                                                                                table_data += '<tr>';
+                                                                                    for(var cell_count=0; cell_count<cell_data.length; cell_count++)
+                                                                                    {
+                                                                                        if(count === 0)
+                                                                                        {
+                                                                                            table_data += '<th>'+cell_data[cell_count]+'</th>';
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            table_data += '<td>'+cell_data[cell_count]+'</td>';
+                                                                                        }
+                                                                                    }
+                                                                                    table_data += '</tr>';
+                                                                                }
+                                                                                table_data += '</table>';
+                                                                                $('#original_table4').html(table_data);
+                                                                            }
+                                                                        });
+                                                                    });   
+                                                                });
+                                                                
+                                                                return{ xs, xs2, xs3, xs4, xs5, ys, ys2, ys3, ys4, ys5, ys6, ystom };
+                                                            };
+                                                            // document.getElementById("wrapper").style.height = '128px';
+                                                            async function chartIt(){
+                                                                const data = await getData();
+                                                                const ctx = document.getElementById('chart').getContext('2d');
+                                                                const myChart = new Chart(ctx, {
+                                                                    type: 'line',
+                                                                    data: {
+                                                                        labels: data.xs,
+                                                                        datasets: [{
+                                                                            label: 'ECG Signal from ' + "Original Data",
+                                                                            data: data.ys,
+                                                                            fill: false,
+                                                                            backgroundColor: 'rgba(255, 99, 0, 0.2)',
+                                                                            borderColor: 'rgba(255, 99, 0, 1)',
+                                                                            borderWidth: 0.5
+                                                                        }],
+                                                                    },
+                                                                    options: {
+                                                                        responsive: true,
+                                                                        maintainAspectRation: false,
+                                                                        title: {
+                                                                            display: true,
+                                                                            text: 'Filtered ECG Signal',
+                                                                            fontSize: 25,
+                                                                            fontColor: '#000'
+                                                                        },
+                                                                        scales: {
+                                                                            yAxes: [{
+                                                                                scaleLabel: {
+                                                                                    display: true,
+                                                                                    labelString: 'MLII'
+                                                                                }
+                                                                            }],
+                                                                            xAxes: [{
+                                                                                scaleLabel: {
+                                                                                    display: true,
+                                                                                    labelString: 'Time (ms)'
+                                                                                }
+                                                                            }]
+                                                                        }, plugins: {
+                                                                            zoom: {
+                                                                                pan: {
+                                                                                    enabled: true,
+                                                                                    mode: 'x',
+                                                                                    rangeMin: {
+                                                                                        x: null,
+                                                                                        y: null
+                                                                                    },
+                                                                                    rangeMax: {
+                                                                                        x: null,
+                                                                                        y: null
+                                                                                    },
+                                                                                    
+                                                                                    speed: 20,
+                                                                                    threshold: 10,
+                                                                                    
+                                                                                    onPan: function({chart}) { console.log(`Pan`); },
+                                                                                    onPanComplete: function({chart}) { console.log(`Panned`); }
+                                                                                },
+                                                                                
+                                                                                zoom: {
+                                                                                    enabled: true,
+                                                                                    drag: true,
+                                                                                    
+                                                                                    mode: 'x',
+                                                                                    
+                                                                                    rangeMin: {
+                                                                                        x: null,
+                                                                                        y: null
+                                                                                    },
+                                                                                    rangeMax: {
+                                                                                        x: null,
+                                                                                        y: null
+                                                                                    },
+                                                                                    speed: 0.1,
+                                                                                    threshold: 2,
+                                                                                    sensitivity: 3,
+                                                                                    onZoom: function({chart}) { console.log(`zooming`); },
+                                                                                    onZoomComplete: function({chart}) { console.log(`zoomed`); }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                });
+                                                                myChart.update();
+                                                            };
+                                                        }
+                                                    </script>
+                                                    
+                                                </body>
+                                                </html>

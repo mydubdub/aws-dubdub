@@ -1,2 +1,2 @@
-# aws-dubdub
-This repository is a thesis work done by Timotius Christopher (BE-2018)
+# thesistrial
+Trial repository for thesis
