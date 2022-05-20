@@ -1,5 +1,6 @@
 # The AWS x Dub-Dub Thesis Project
-by Timotius Christopher BE-2018 and A.A. Iskandar
+by T.C. Tantokusumo BE-2018 and A.A. Iskandar
+Swiss German University
 
 ## 1. Objective
 
@@ -20,7 +21,7 @@ test123
 
 ### 2.2. AWS Configuration
 
-### 2.3. IoT Core
+### 2.3. AWS IoT Core
 
 ### 2.4. Mongo DB
 
