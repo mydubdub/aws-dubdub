@@ -1,3 +1,27 @@
+# The AWS x Dub-Dub Thesis Project
+by Timotius Christopher BE-2018 and A.A. Iskandar
+
+## 1. Objective
+
+The main objective of this project is to provide a telemedicine solution for remote area that has a prevalence of high heart diseases by performing a pre-screening using Dub-Dub.
+
+## 2. System Architecture 
+
+Insert the figure here --> ![Image](src)
+
+{Provide the descriptions here}
+
+### 2.1. Pre-diagnosis using C++ (Sam Andrew)
+
+### 2.2. AWS Configuration
+
+### 2.3. IoT Core
+
+### 2.4. Mongo DB
+
+
+
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/mydubdub/aws-dubdub/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
