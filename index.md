@@ -8,7 +8,7 @@ The main objective of this project is to provide a telemedicine solution for rem
 ## 2. System Architecture 
 
 Insert the figure here --> ![Image](src)
-![Virtual System DubDub drawio (3)](https://user-images.githubusercontent.com/61266571/169596412-1a678045-aad5-4664-b77b-d86753c51474.png)
+![Virtual System DubDub drawio](https://user-images.githubusercontent.com/61266571/169596674-df56d191-7914-404b-936f-3732987415cc.svg)
 
 
 {Provide the descriptions here}
