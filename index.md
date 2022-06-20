@@ -12,12 +12,12 @@ The main objective of this project is to provide a telemedicine solution for rem
 
 ### B. REAL-TIME WEARABLE ECG SIGNAL ANALYSIS FOR CARDIAC ARRHYTHMIA DETECTION (Sugiarto, 2019)
 ![image](https://user-images.githubusercontent.com/61266571/171039054-2d310b3b-5b36-4772-9701-87a4916c3934.png)
-Flowchart of ECG feature extraction software connected to smartphone display via bluetooth connection (Sugiarto, 2019)
+
 
 
 ### C. DEVELOPMENT OF CLOUD COMPUTING ALGORITHM FOR ARRHYTHMIA DETECTION AND HEART DISEASES (Setiawan, 2020)
 ![image](https://user-images.githubusercontent.com/61266571/171039140-45440d5d-05c5-49f5-aa64-aa5e59097377.png)
-Web Application Data Flow (Setiawan, 2020)
+
 
 
 ## 3. Propose System Design
